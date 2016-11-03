@@ -5,6 +5,7 @@
 **/
 
 var tags = [
+  'highway+name',
   'addr:housenumber+addr:street',
   'amenity+name',
   'building+name',

@@ -4,10 +4,16 @@
   in to model.Document() objects which the rest of the pipeline expect to consume.
 **/
 
+var fs = require('fs');
+var zlib = require('zlib');
+var path = require('path');
 var through = require('through2');
 var Document = require('pelias-model').Document;
 var peliasLogger = require( 'pelias-logger' ).get( 'openstreetmap' );
 var _ = require('lodash');
+
+var writer = zlib.createGzip();
+writer.pipe( fs.createWriteStream(path.normalize('highways.txt.gz') ) );
 
 module.exports = function(){
 
@@ -21,6 +27,14 @@ module.exports = function(){
 
       // we need to assume it will be a venue and later if it turns out to be an address it will get changed
       var doc = new Document( 'openstreetmap', 'venue', uniqueId );
+
+      // highway tags
+      if( item.hasOwnProperty('tags') ){
+        if( item.tags.hasOwnProperty('highway') ){
+          writer.write(JSON.stringify(item));
+          writer.write('\n');
+        }
+      }
 
       // Set latitude / longitude
       if( item.hasOwnProperty('lat') && item.hasOwnProperty('lon') ){
@@ -62,6 +76,11 @@ module.exports = function(){
 
   // catch stream errors
   stream.on( 'error', peliasLogger.error.bind( peliasLogger, __filename ) );
+
+  // close the writer
+  stream.on( 'finish', function () {
+      writer.end();
+  });
 
   return stream;
 };
