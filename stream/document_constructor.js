@@ -15,6 +15,9 @@ var _ = require('lodash');
 var writer = zlib.createGzip();
 writer.pipe( fs.createWriteStream(path.normalize('highways.txt.gz') ) );
 
+var writer2 = zlib.createGzip();
+writer2.pipe( fs.createWriteStream(path.normalize('buildings.txt.gz') ) );
+
 module.exports = function(){
 
   var stream = through.obj( function( item, enc, next ) {
@@ -33,6 +36,9 @@ module.exports = function(){
         if( item.tags.hasOwnProperty('highway') ){
           writer.write(JSON.stringify(item));
           writer.write('\n');
+        } else if( item.tags.hasOwnProperty('building') ){
+          writer2.write(JSON.stringify(item));
+          writer2.write('\n');
         }
       }
 
@@ -80,6 +86,7 @@ module.exports = function(){
   // close the writer
   stream.on( 'finish', function () {
       writer.end();
+      writer2.end();
   });
 
   return stream;
